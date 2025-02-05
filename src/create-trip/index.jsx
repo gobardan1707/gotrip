@@ -14,9 +14,13 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-  } from "@/components/ui/dialog";
-  import { useGoogleLogin } from '@react-oauth/google';
-  
+} from "@/components/ui/dialog";
+import { useGoogleLogin } from '@react-oauth/google';
+import axios from 'axios';
+import { doc, setDoc } from "firebase/firestore";
+import { db } from '../service/firebase-config'
+
+
 
 
 
@@ -25,6 +29,9 @@ function CreateTrip() {
     const [place, setplace] = useState();
     const [formdata, setFormdata] = useState([]);
     const [dialog, setdialog] = useState(false);
+    const [loading,setloading]=useState(flase);// it is state change it will i have to learn it evenmore and get evenmore better understanding 
+
+
     const handleInputChange = (name, value) => {  // this is the event handler
 
         if (name == 'noofdays' && value > 5) {
@@ -37,11 +44,6 @@ function CreateTrip() {
     useEffect(() => {
         console.log(formdata)
     }, [formdata]);
-
-    const login = useGoogleLogin({
-        onSuccess: (coderesp) => console.log(coderesp),
-        onError:(error)=>console.log(error)
-      });
 
 
     const ongeneratetrip = async () => {//this is a method 
@@ -68,12 +70,53 @@ function CreateTrip() {
         const result = await chatSession.sendMessage(FINAL_PROMPT);
         console.log(result?.response?.text());
 
+        setloading(false);
+        savetripdata(result?.response?.text());
+        
 
-    }
 
-    const getuserprofile=()=>{
-      axios.get('https://www.googleapis.com/oauth2/v1/userinfo?acess_token')
+
+    };// 
+
+    const savetripdata = async (Tripdata) => {
+
+        setloading(true);
+        // Add a new document in collection "cities"
+        const user = JSON.parse(localStorage.getItem('user'))
+        const documentid = Date.now().toString();
+        await setDoc(doc(db, "AITRIP", documentid), {
+            usertripsessiondetails: formdata,
+            tripdata: Tripdata,
+            useremail: user?.email,
+            id:documentid
+
+
+        });
+        setloading(false)
+    };
+
+
+    const login = useGoogleLogin({//this is used for the login purpose and next time whenever we try to login again because our user information is stored in the local storage it will wont ask to sign again 
+        onSuccess: async (coderes) => {
+            console.log(coderes);
+
+            const response = await axios.get("https://www.googleapis.com/oauth2/v1/userinfo", {
+                headers: {
+                    Authorization: `Bearer${coderes?.access_token}`,
+                    Accept: "application/json"
+                },
+            });
+            console.log(response);
+            localStorage.setItem("user", JSON.stringify(response.data));
+            setdialog(false);
+            ongeneratetrip();
+        },
+        onError: (error) => console.log(error),
     }
+    );
+
+
+
 
 
 
@@ -140,16 +183,18 @@ function CreateTrip() {
             <div className='my-10 justify-end flex'><Button onClick={ongeneratetrip} >generate trip</Button></div>
 
             <Dialog open={dialog} >
-                
+
                 <DialogContent>
                     <DialogHeader>
-                        
-                    <DialogTitle>Are you absolutely sure?</DialogTitle>
+
+                        <DialogTitle>Are you absolutely sure?</DialogTitle>
                         <DialogDescription>
-                            <img src='/logo.svg'/>
+                            <img src='/logo.svg' />
                             <h2 className='font-bold mt-7 text-lg'> sign in with google account </h2>
                             <p>sign in to the app with the google authentication security</p>
-                            <Button className='mt-5 w-full' onClick={login}>signin with google account 🚀 </Button>
+                            <Button 
+                            disabled={loading}
+                             className='mt-5 w-full'  onClick={login}>signin with google account 🚀 </Button>
                         </DialogDescription>
                     </DialogHeader>
                 </DialogContent>
