@@ -29,7 +29,7 @@ function CreateTrip() {
     const [place, setplace] = useState();
     const [formdata, setFormdata] = useState([]);
     const [dialog, setdialog] = useState(false);
-    const [loading,setloading]=useState(flase);// it is state change it will i have to learn it evenmore and get evenmore better understanding 
+    const [loading,setloading]=useState(false);// it is state change it will i have to learn it evenmore and get evenmore better understanding 
 
 
     const handleInputChange = (name, value) => {  // this is the event handler
