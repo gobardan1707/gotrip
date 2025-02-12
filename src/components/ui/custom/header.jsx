@@ -6,7 +6,7 @@ function Header() {
     <div className='p-3 shadow-sm flex justify-between items-center px-5' >
       <img src='/logo.svg'/>
       <div>
-        <Button>sign in </Button>
+        <Button>sign in first time  </Button>
       </div>
     </div>
   )
